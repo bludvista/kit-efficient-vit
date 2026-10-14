@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-14T13:12:19",
+  "cpu_model": "AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx",
+  "cpu_physical_cores": 4,
+  "cpu_logical_cores": 8,
+  "ram_total_gb": 5.91,
+  "os": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.6",
+  "torch": "2.14.1+cpu",
+  "torchvision": "0.29.1+cpu",
+  "timm": "1.0.30",
+  "onnxruntime": "1.31.0",
+  "numpy": "2.5.2",
+  "torch_num_threads": 4,
+  "configured_num_threads": 4,
+  "torch_quantized_engines": [
+    "onednn"
+  ],
+  "torch_parallel_info": "ATen/Parallel:\n\tat::get_num_threads() : 4\n\tat::get_num_interop_threads() : 4\nOpenMP 2019\n\tomp_get_max_threads() : 4\nIntel(R) oneAPI Math Kernel Library Version 2026.1-Product Build 20260612 for Intel(R) 64 architecture applications\n\tmkl_get_max_threads() : 4\nIntel(R) MKL-DNN v3.12.0 (Git Hash 80afa71049cd69a3df32adcccb623b12cd7baa22)\nstd::thread::hardware_concurrency() : 8\nEnvironment variables:\n\tOMP_NUM_THREADS : 4\n\tMKL_NUM_THREADS : [not set]\nATen parallel backend: OpenMP\n"
+}

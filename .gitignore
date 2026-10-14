@@ -1,0 +1,10 @@
+# Data is not committed (Imagenette, KITTI)
+data/
+# Virtual environment
+.venv/
+__pycache__/
+*.pyc
+# Model files exported during experiments
+*.onnx
+*.pt
+*.pth
