@@ -1,0 +1,2 @@
+model,method,run_id,start_time,end_time,n_blocks,n_timed_runs,warmup_per_block,latency_median_ms,latency_p95_ms,throughput_img_per_s,size_on_disk_mb,torch_threads,idle_cpu_percent_before,baseline_drift_spread,peak_after_import_mb,peak_after_load_mb,peak_total_mb,load_increment_mb,inference_increment_mb,memory_inference_runs
+deit_tiny_patch16_224,fp32,2026-10-14T14-02-58,2026-10-14T14:03:04,2026-10-14T14:03:35,5,250,10,93.31080003175884,122.19895509188053,10.716873069994518,21.85463237762451,4,20.8,0.026535442528429636,306.03515625,359.33984375,359.33984375,53.3046875,0.0,20

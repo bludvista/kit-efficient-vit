@@ -8,6 +8,7 @@ import sys
 import psutil
 import torch
 
+from bench import power_mode
 from common import NUM_THREADS, RESULTS_DIR, setup
 
 
@@ -49,6 +50,8 @@ def main() -> None:
         "torch_num_threads": torch.get_num_threads(),
         "configured_num_threads": NUM_THREADS,
         "torch_quantized_engines": torch.backends.quantized.supported_engines,
+        "torch_cpu_capability": torch.backends.cpu.get_cpu_capability(),
+        "power": power_mode(),
         "torch_parallel_info": torch.__config__.parallel_info(),
     }
     RESULTS_DIR.mkdir(exist_ok=True)

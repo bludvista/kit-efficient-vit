@@ -1,0 +1,36 @@
+{
+  "run_id": "2026-10-14T14-02-58",
+  "model": "deit_tiny_patch16_224",
+  "methods": [
+    "fp32"
+  ],
+  "system_state_before": {
+    "timestamp": "2026-10-14T14:02:58",
+    "idle_cpu_percent": 20.8,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "on_ac_power": true
+  },
+  "system_state_after": {
+    "timestamp": "2026-10-14T14:03:50",
+    "idle_cpu_percent": 20.0,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "on_ac_power": true
+  },
+  "drift": {
+    "baseline_block_medians_ms": [
+      94.7599999490194,
+      93.87565002543852,
+      92.31049998197705,
+      94.08494998933747,
+      93.24745001504198
+    ],
+    "relative_spread": 0.026535442528429636,
+    "threshold": 0.1,
+    "drift_detected": false
+  },
+  "end_time": "2026-10-14T14:03:53"
+}

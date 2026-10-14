@@ -1,0 +1,2 @@
+model,method,n_images,subset,top1_restricted,top1_unrestricted,correct_restricted,correct_unrestricted,input_size,interpolation,crop_pct,source_resolution,eval_batch_size,eval_seconds,start_time,end_time,torch_threads
+deit_tiny_patch16_224,fp32,3925,full,0.9819108280254777,0.7047133757961783,3854,2766,224x224,bicubic,0.9,160 (upscaled),32,618.2408375999657,2026-10-14T13:38:24,2026-10-14T13:48:44,4

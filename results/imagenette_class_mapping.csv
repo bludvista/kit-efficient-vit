@@ -1,0 +1,11 @@
+imagenette_label,wnid,imagenet_index,description
+0,n01440764,0,"tench, Tinca tinca"
+1,n02102040,217,"English springer, English springer spaniel"
+2,n02979186,482,cassette player
+3,n03000684,491,"chain saw, chainsaw"
+4,n03028079,497,"church, church building"
+5,n03394916,566,"French horn, horn"
+6,n03417042,569,"garbage truck, dustcart"
+7,n03425413,571,"gas pump, gasoline pump, petrol pump, island dispenser"
+8,n03445777,574,golf ball
+9,n03888257,701,"parachute, chute"
