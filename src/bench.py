@@ -28,6 +28,13 @@ def now() -> str:
     return datetime.datetime.now().isoformat(timespec="seconds")
 
 
+# Names confirmed by the user in Windows Settings for GUIDs seen on this laptop.
+POWER_OVERLAY_NAMES = {
+    "961cc777-2547-4f9d-8174-7d86181b8a7a":
+        "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+}
+
+
 def power_mode() -> dict:
     """Windows power plan and power-mode overlay (raw GUIDs from the registry)."""
     state = {}
@@ -42,6 +49,8 @@ def power_mode() -> dict:
                 state[name] = None
     except (ImportError, OSError):
         pass
+    state["overlay_ac_name"] = POWER_OVERLAY_NAMES.get(
+        state.get("ActiveOverlayAcPowerScheme"), "unknown (not confirmed)")
     battery = psutil.sensors_battery()
     state["on_ac_power"] = None if battery is None else bool(battery.power_plugged)
     return state
