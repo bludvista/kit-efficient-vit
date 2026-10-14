@@ -56,12 +56,27 @@ def power_mode() -> dict:
     return state
 
 
+WATCHED_APPS = ["chrome", "msedge", "firefox", "brave", "opera", "code", "onedrive"]
+
+
+def running_apps() -> dict:
+    """Number of running processes per watched app (browsers, VS Code, OneDrive)."""
+    counts = {app: 0 for app in WATCHED_APPS}
+    for p in psutil.process_iter(["name"]):
+        name = (p.info["name"] or "").lower().removesuffix(".exe")
+        if name in counts:
+            counts[name] += 1
+    return counts
+
+
 def system_state(idle_seconds: float = 3.0) -> dict:
-    """Snapshot taken right before a timing run: power settings and idle CPU load."""
+    """Snapshot taken right before a timing run: power settings, idle CPU load
+    and which background apps are running."""
     return {
         "timestamp": now(),
         "idle_cpu_percent": psutil.cpu_percent(interval=idle_seconds),
         **power_mode(),
+        "running_apps": running_apps(),
     }
 
 
@@ -100,6 +115,22 @@ def drift_check(baseline_medians: list[float], threshold: float = DRIFT_THRESHOL
         "relative_spread": spread,
         "threshold": threshold,
         "drift_detected": spread > threshold,
+    }
+
+
+@torch.inference_mode()
+def token_counts(model, x) -> dict:
+    """Tokens entering the first block and leaving each block, via forward hooks."""
+    counts, inputs = [], []
+    hooks = [b.register_forward_hook(lambda m, i, o: counts.append(o.shape[1])) for b in model.blocks]
+    hooks.append(model.blocks[0].register_forward_pre_hook(lambda m, i: inputs.append(i[0].shape[1])))
+    model(x)
+    for h in hooks:
+        h.remove()
+    return {
+        "tokens_in": inputs[0],
+        "tokens_out": counts[-1],
+        "tokens_mean_per_block": float(np.mean(counts)),
     }
 
 

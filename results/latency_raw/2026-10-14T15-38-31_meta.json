@@ -1,0 +1,78 @@
+{
+  "run_id": "2026-10-14T15-38-31",
+  "model": "deit_tiny_patch16_224",
+  "methods": [
+    "fp32",
+    "tome_r0",
+    "tome_r4",
+    "tome_r8",
+    "tome_r12",
+    "tome_r16",
+    "tome_r20",
+    "tome_r24"
+  ],
+  "system_state_before": {
+    "timestamp": "2026-10-14T15:38:31",
+    "idle_cpu_percent": 5.8,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true,
+    "running_apps": {
+      "chrome": 0,
+      "msedge": 0,
+      "firefox": 0,
+      "brave": 0,
+      "opera": 0,
+      "code": 10,
+      "onedrive": 0
+    }
+  },
+  "system_state_after": {
+    "timestamp": "2026-10-14T15:42:01",
+    "idle_cpu_percent": 5.6,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true,
+    "running_apps": {
+      "chrome": 0,
+      "msedge": 0,
+      "firefox": 0,
+      "brave": 0,
+      "opera": 0,
+      "code": 10,
+      "onedrive": 0
+    }
+  },
+  "heatup": {
+    "start_time": "2026-10-14T15:38:39",
+    "end_time": "2026-10-14T15:39:39",
+    "seconds": 60.0,
+    "forward_passes": 947
+  },
+  "drift": {
+    "baseline_block_medians_ms": [
+      61.19934999151155,
+      61.73805001890287,
+      61.95619999198243,
+      63.22984996950254,
+      63.01024998538196,
+      61.74440000904724,
+      60.873050009831786,
+      64.54384996322915
+    ],
+    "relative_spread": 0.06030254690383481,
+    "threshold": 0.1,
+    "drift_detected": false
+  },
+  "baseline_vs_previous_run": {
+    "run_id": "2026-10-14T14-02-58",
+    "latency_median_ms": 93.31080003175884,
+    "this_run_median_ms": 62.28785001439974,
+    "ratio_this_over_previous": 0.6675309824071782
+  },
+  "end_time": "2026-10-14T15:42:04"
+}

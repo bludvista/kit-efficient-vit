@@ -1,0 +1,54 @@
+{
+  "run_id": "2026-10-14T14-50-57",
+  "model": "deit_tiny_patch16_224",
+  "methods": [
+    "fp32",
+    "tome_r0",
+    "tome_r4",
+    "tome_r8",
+    "tome_r12",
+    "tome_r16",
+    "tome_r20",
+    "tome_r24"
+  ],
+  "system_state_before": {
+    "timestamp": "2026-10-14T14:50:57",
+    "idle_cpu_percent": 11.5,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true
+  },
+  "system_state_after": {
+    "timestamp": "2026-10-14T14:53:20",
+    "idle_cpu_percent": 6.8,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true
+  },
+  "drift": {
+    "baseline_block_medians_ms": [
+      57.52365000080317,
+      59.01784996967763,
+      59.84689999604598,
+      62.021550023928285,
+      60.958399961236864,
+      60.884199978318065,
+      64.69510000897571,
+      61.239799950271845
+    ],
+    "relative_spread": 0.12466959256014545,
+    "threshold": 0.1,
+    "drift_detected": true
+  },
+  "baseline_vs_previous_run": {
+    "run_id": "2026-10-14T14-02-58",
+    "latency_median_ms": 93.31080003175884,
+    "this_run_median_ms": 60.961399984080344,
+    "ratio_this_over_previous": 0.6533155857985549
+  },
+  "end_time": "2026-10-14T14:53:23"
+}

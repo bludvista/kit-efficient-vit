@@ -14,13 +14,13 @@ import time
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 import models
 from bench import now
 from class_mapping import load_mapping
 from common import RESULTS_DIR, SEED, setup
-from data import ImagenetteVal
+from data import CachedImagenetteVal
 
 ACC_CSV = RESULTS_DIR / "accuracy.csv"
 PRED_DIR = RESULTS_DIR / "predictions"
@@ -39,12 +39,12 @@ def upsert(csv_path, row: dict, keys: list[str]) -> None:
 @torch.inference_mode()
 def evaluate(model_name: str, method: str, subset: int | None, batch_size: int) -> dict:
     model, data_config = models.build(model_name, method)
+    ds = CachedImagenetteVal(data_config)  # identical to ImagenetteVal, see data.verify_cache
     indices = None
-    full_size = len(ImagenetteVal(data_config))
-    if subset is not None and subset < full_size:
+    if subset is not None and subset < len(ds):
         rng = np.random.default_rng(SEED)
-        indices = sorted(rng.choice(full_size, size=subset, replace=False).tolist())
-    ds = ImagenetteVal(data_config, indices)
+        indices = sorted(rng.choice(len(ds), size=subset, replace=False).tolist())
+        ds = Subset(ds, indices)
     loader = DataLoader(ds, batch_size=batch_size, shuffle=False, num_workers=0)
     imagenette_idx = torch.tensor([r["imagenet_index"] for r in load_mapping()])
 

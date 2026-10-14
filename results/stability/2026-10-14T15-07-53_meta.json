@@ -1,0 +1,55 @@
+{
+  "session_id": "2026-10-14T15-07-53",
+  "label": "session1",
+  "model": "deit_tiny_patch16_224",
+  "system_state_before": {
+    "timestamp": "2026-10-14T15:07:53",
+    "idle_cpu_percent": 6.4,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true,
+    "running_apps": {
+      "chrome": 0,
+      "msedge": 0,
+      "firefox": 0,
+      "brave": 0,
+      "opera": 0,
+      "code": 10,
+      "onedrive": 0
+    }
+  },
+  "system_state_after": {
+    "timestamp": "2026-10-14T15:08:36",
+    "idle_cpu_percent": 7.3,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true,
+    "running_apps": {
+      "chrome": 0,
+      "msedge": 0,
+      "firefox": 0,
+      "brave": 0,
+      "opera": 0,
+      "code": 10,
+      "onedrive": 0
+    }
+  },
+  "block_medians_ms": [
+    55.48094998812303,
+    62.805900000967085,
+    61.3055499852635,
+    60.69710000883788,
+    63.10700002359226,
+    61.84594996739179,
+    60.749500000383705,
+    59.64725004741922,
+    63.26365005224943,
+    63.04015003843233
+  ],
+  "session_median_ms": 61.01654999656603,
+  "relative_spread": 0.14027697913955092
+}

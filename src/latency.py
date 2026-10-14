@@ -1,6 +1,8 @@
 """Latency, throughput, peak memory and size on disk, batch size 1.
 
-Thermal-drift control: timed blocks of the configurations are interleaved with
+Thermal-drift control: first an untimed heat-up of the FP32 model for
+HEATUP_SECONDS (the stability test in stability.py showed the first block on a
+cool CPU is 8-15% faster than later ones). Then timed blocks of the configurations are interleaved with
 FP32 baseline blocks (B, C1, B, C2, ..., B; at least MIN_BASELINE_BLOCKS of B).
 If baseline block medians spread by more than bench.DRIFT_THRESHOLD, the run
 is flagged and the summary CSV is NOT updated; only raw logs are kept.
@@ -13,6 +15,7 @@ Outputs (run_id = start timestamp):
 """
 import argparse
 import json
+import time
 
 import pandas as pd
 import torch
@@ -20,7 +23,7 @@ import torch
 import models
 from accuracy import upsert
 from bench import (DRIFT_THRESHOLD, drift_check, measure_memory, now,
-                   size_on_disk_mb, system_state, time_block)
+                   size_on_disk_mb, system_state, time_block, token_counts)
 from common import RESULTS_DIR, setup
 from data import timing_input
 
@@ -28,6 +31,17 @@ RAW_DIR = RESULTS_DIR / "latency_raw"
 SUMMARY_CSV = RESULTS_DIR / "latency.csv"
 BASELINE = "fp32"
 MIN_BASELINE_BLOCKS = 3
+HEATUP_SECONDS = 60.0
+
+
+@torch.inference_mode()
+def heat_up(model, x, seconds: float) -> dict:
+    """Run the model untimed until `seconds` have passed. Not used in results."""
+    start, t0, n = now(), time.perf_counter(), 0
+    while time.perf_counter() - t0 < seconds:
+        model(x)
+        n += 1
+    return {"start_time": start, "end_time": now(), "seconds": seconds, "forward_passes": n}
 
 
 def schedule(methods: list[str], min_baseline: int) -> list[str]:
@@ -45,6 +59,7 @@ def main() -> None:
     p.add_argument("--model", default="deit_tiny_patch16_224")
     p.add_argument("--methods", nargs="+", default=[BASELINE])
     p.add_argument("--min-baseline-blocks", type=int, default=MIN_BASELINE_BLOCKS)
+    p.add_argument("--heatup-seconds", type=float, default=HEATUP_SECONDS)
     args = p.parse_args()
     setup()
 
@@ -55,6 +70,9 @@ def main() -> None:
 
     built = {m: models.build(args.model, m) for m in set(args.methods) | {BASELINE}}
     x = timing_input(built[BASELINE][1])
+
+    heatup = heat_up(built[BASELINE][0], x, args.heatup_seconds)
+    print(f"heat-up: {heatup['forward_passes']} untimed passes in {heatup['seconds']:.0f} s")
 
     blocks, runs = [], []
     for i, method in enumerate(schedule(args.methods, args.min_baseline_blocks)):
@@ -87,6 +105,7 @@ def main() -> None:
             "latency_median_ms": median,
             "latency_p95_ms": float(t.quantile(0.95)),
             "throughput_img_per_s": 1000.0 / median,
+            **token_counts(built[method][0], x),
             "size_on_disk_mb": size_on_disk_mb(built[method][0]),
             "torch_threads": torch.get_num_threads(),
             "idle_cpu_percent_before": state_before["idle_cpu_percent"],
@@ -98,9 +117,21 @@ def main() -> None:
     for row in summary:
         row.update(measure_memory(args.model, row["method"]))
 
+    # Cross-run check: this run's baseline vs the previously accepted baseline.
+    this_base = float(runs_df[runs_df.method == BASELINE].latency_ms.median())
+    previous = None
+    if SUMMARY_CSV.exists():
+        old = pd.read_csv(SUMMARY_CSV)
+        old = old[(old.model == args.model) & (old.method == BASELINE)]
+        if len(old):
+            previous = {"run_id": old.run_id.iloc[0],
+                        "latency_median_ms": float(old.latency_median_ms.iloc[0]),
+                        "this_run_median_ms": this_base,
+                        "ratio_this_over_previous": this_base / float(old.latency_median_ms.iloc[0])}
+
     meta = {"run_id": run_id, "model": args.model, "methods": args.methods,
             "system_state_before": state_before, "system_state_after": system_state(),
-            "drift": drift, "end_time": now()}
+            "heatup": heatup, "drift": drift, "baseline_vs_previous_run": previous, "end_time": now()}
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     blocks_df.to_csv(RAW_DIR / f"{run_id}_blocks.csv", index=False)
@@ -110,6 +141,10 @@ def main() -> None:
 
     print(f"\nbaseline block medians (ms): {[round(m, 2) for m in drift['baseline_block_medians_ms']]}")
     print(f"relative spread {drift['relative_spread']:.1%} (threshold {DRIFT_THRESHOLD:.0%})")
+    if previous:
+        print(f"baseline vs previous accepted run {previous['run_id']}: "
+              f"{this_base:.2f} vs {previous['latency_median_ms']:.2f} ms "
+              f"(ratio {previous['ratio_this_over_previous']:.3f})")
     if drift["drift_detected"]:
         print("DRIFT DETECTED: summary NOT written to results/latency.csv. Raw logs kept.")
     else:
