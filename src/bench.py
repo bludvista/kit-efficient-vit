@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import psutil
 import torch
 
@@ -131,6 +132,36 @@ def token_counts(model, x) -> dict:
         "tokens_in": inputs[0],
         "tokens_out": counts[-1],
         "tokens_mean_per_block": float(np.mean(counts)),
+    }
+
+
+def drift_check_rolling(baseline_medians: list[float], window: int = 3,
+                        threshold: float = DRIFT_THRESHOLD) -> dict:
+    """Rule B (defined 2026-10-15 after the rejected run 2026-10-15T14-28-48; used
+    only for later runs). Drift = spread of the rolling median over `window`
+    consecutive baseline blocks > threshold. A single slow (or fast) block does not
+    move a rolling median of 3, so isolated spikes do not fail the run, but they
+    are counted: a block is an ignored spike if it differs by more than
+    `threshold` from the centred median of itself and its neighbours."""
+    m = pd.Series(baseline_medians, dtype=float)
+    rolling = m.rolling(window).median().dropna()
+    spread = float((rolling.max() - rolling.min()) / rolling.min())
+    local = m.rolling(window, center=True, min_periods=2).median()
+    dev = (m - local).abs() / local
+    spikes = [{"baseline_index": int(i), "median_ms": float(m[i]),
+               "local_median_ms": float(local[i]), "deviation": float(dev[i])}
+              for i in m.index[dev > threshold]]
+    raw = drift_check(baseline_medians, threshold)
+    return {
+        "rule": f"rolling median of {window} consecutive baseline blocks, spread <= {threshold:.0%}",
+        "baseline_block_medians_ms": list(map(float, baseline_medians)),
+        "rolling_medians_ms": rolling.tolist(),
+        "relative_spread": spread,
+        "threshold": threshold,
+        "drift_detected": spread > threshold,
+        "ignored_spikes": spikes,
+        "n_ignored_spikes": len(spikes),
+        "raw_spread_old_rule": raw["relative_spread"],
     }
 
 

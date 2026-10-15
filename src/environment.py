@@ -46,6 +46,7 @@ def main() -> None:
         "torchvision": version("torchvision"),
         "timm": version("timm"),
         "onnxruntime": version("onnxruntime"),
+        "torchao": version("torchao"),
         "numpy": version("numpy"),
         "torch_num_threads": torch.get_num_threads(),
         "configured_num_threads": NUM_THREADS,

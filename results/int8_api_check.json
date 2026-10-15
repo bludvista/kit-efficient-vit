@@ -1,0 +1,65 @@
+{
+  "torch": "2.14.1+cpu",
+  "torchao": "0.18.0",
+  "quantized_engine": "onednn",
+  "cpu_vnni_supported (torchao check)": false,
+  "reduce_range_used_for_B": true,
+  "n_images": 200,
+  "fp32": {
+    "max_abs_logit_diff_vs_fp32": 0.0,
+    "mean_abs_logit_diff_vs_fp32": 0.0,
+    "top1_agreement_vs_fp32_unrestricted": 1.0,
+    "top1_agreement_vs_fp32_restricted": 1.0,
+    "top1_restricted_on_subset": 0.9900000095367432,
+    "top1_unrestricted_on_subset": 0.6150000095367432,
+    "size_on_disk_mb": 21.85463237762451,
+    "single_pass_ms": [
+      54.09790005069226,
+      60.19430002197623,
+      64.40929998643696
+    ]
+  },
+  "A_torch_ao_quantize_dynamic": {
+    "quantize_seconds": 5.881935699959286,
+    "modules": {
+      "torch.ao.nn.quantized.dynamic.modules.linear.Linear": 49,
+      "torch.ao.nn.quantized.modules.linear.LinearPackedParams": 49
+    },
+    "single_pass_ms": [
+      50.49910000525415,
+      42.33710002154112,
+      50.40830001235008
+    ],
+    "max_abs_logit_diff_vs_fp32": 1.7926530838012695,
+    "mean_abs_logit_diff_vs_fp32": 0.1458684504032135,
+    "top1_agreement_vs_fp32_unrestricted": 0.9200000166893005,
+    "top1_agreement_vs_fp32_restricted": 0.9950000047683716,
+    "top1_restricted_on_subset": 0.9900000095367432,
+    "top1_unrestricted_on_subset": 0.6100000143051147,
+    "size_on_disk_mb": 6.1510725021362305,
+    "runs": true
+  },
+  "B_torchao_quantize_": {
+    "quantize_seconds": 0.4404942999826744,
+    "modules": {
+      "torch.nn.modules.linear.Linear (weight: Int8Tensor)": 49
+    },
+    "single_pass_ms": [
+      1862.6691999379545,
+      1859.3229999532923,
+      1958.2381000509486
+    ],
+    "runs": true,
+    "skipped": "eager forward too slow (> 10x FP32); agreement and latency probe not run"
+  },
+  "latency_probe_block_medians_ms (choice only, not a result)": {
+    "fp32": [
+      78.590199991595,
+      73.21860000956804
+    ],
+    "A_torch_ao_quantize_dynamic": [
+      75.11045003775507,
+      71.23125001089647
+    ]
+  }
+}

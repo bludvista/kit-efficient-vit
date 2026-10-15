@@ -5,14 +5,20 @@ Methods:
   tome_r<R>   official ToMe patch (facebookresearch/ToMe, pinned commit) with
               constant r = R tokens merged per block. ToMe's attention is the
               explicit softmax(QK^T)V version, also for R = 0.
+  int8        INT8 dynamic quantization of all nn.Linear layers with
+              torch.ao.quantization.quantize_dynamic (qint8 weights, activations
+              quantized at run time; engine onednn). Chosen in int8_api_check.py.
+  tome_r<R>_int8  ToMe patch first, then the same INT8 quantization.
 Compatibility with the installed timm is tested in tome_compat_check.py.
 """
 import re
 import subprocess
 import sys
+import warnings
 
 import timm
 import torch
+from torch import nn
 from timm.data import resolve_data_config
 
 from common import DATA_DIR
@@ -37,10 +43,21 @@ def _import_tome():
 
 
 def parse_method(method: str) -> dict:
-    m = re.fullmatch(r"fp32|tome_r(\d+)", method)
+    m = re.fullmatch(r"(?:fp32|int8)|tome_r(\d+)(_int8)?", method)
     if m is None:
         raise ValueError(f"Unknown method {method!r}")
-    return {"tome_r": None if m.group(1) is None else int(m.group(1))}
+    return {"tome_r": None if m.group(1) is None else int(m.group(1)),
+            "int8": method == "int8" or m.group(2) is not None}
+
+
+def quantize_int8(model: torch.nn.Module) -> torch.nn.Module:
+    """INT8 dynamic quantization of all nn.Linear layers (in place)."""
+    with warnings.catch_warnings():
+        # torch.ao.quantization is deprecated in favour of torchao; see NOTES.md.
+        warnings.simplefilter("ignore", category=FutureWarning)
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        return torch.ao.quantization.quantize_dynamic(
+            model, {nn.Linear}, dtype=torch.qint8, inplace=True)
 
 
 def build(model_name: str, method: str = "fp32") -> tuple[torch.nn.Module, dict]:
@@ -52,4 +69,6 @@ def build(model_name: str, method: str = "fp32") -> tuple[torch.nn.Module, dict]
         tome = _import_tome()
         tome.patch.timm(model)  # prop_attn=True (default) for off-the-shelf models
         model.r = spec["tome_r"]
+    if spec["int8"]:
+        model = quantize_int8(model)
     return model, data_config

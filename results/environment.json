@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-14T14:10:43",
+  "date": "2026-10-15T15:00:26",
   "cpu_model": "AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx",
   "cpu_physical_cores": 4,
   "cpu_logical_cores": 8,
@@ -10,6 +10,7 @@
   "torchvision": "0.29.1+cpu",
   "timm": "1.0.30",
   "onnxruntime": "1.31.0",
+  "torchao": "0.18.0",
   "numpy": "2.5.2",
   "torch_num_threads": 4,
   "configured_num_threads": 4,
