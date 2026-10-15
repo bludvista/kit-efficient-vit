@@ -1,4 +1,4 @@
-"""Latency, throughput, peak memory and size on disk, batch size 1.
+"""Latency, throughput and size on disk, batch size 1. (Peak memory: memory.py.)
 
 Thermal-drift control (rule B, see results/NOTES.md): first an untimed heat-up
 of the FP32 model for HEATUP_SECONDS so the laptop reaches its sustained-load
@@ -26,7 +26,7 @@ import torch
 
 import models
 from accuracy import upsert
-from bench import (DRIFT_THRESHOLD, drift_check_rolling, measure_memory, now,
+from bench import (DRIFT_THRESHOLD, drift_check_rolling, now,
                    size_on_disk_mb, system_state, time_block, token_counts)
 from common import RESULTS_DIR, setup
 from data import timing_input
@@ -130,10 +130,6 @@ def main() -> None:
             "n_ignored_baseline_spikes": drift["n_ignored_spikes"],
         })
     del built
-
-    # Peak memory: each configuration in its own fresh process, after timing.
-    for row in summary:
-        row.update(measure_memory(args.model, row["method"]))
 
     # Cross-run check: this run's baseline vs the previously accepted baseline.
     this_base = float(blocks_df[blocks_df.method == BASELINE].latency_median_ms.median())

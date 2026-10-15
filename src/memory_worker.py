@@ -1,9 +1,13 @@
-"""Measure peak memory of one configuration. Run in a fresh process (see bench.measure_memory).
+"""Measure peak memory of one saved configuration. Run in a fresh process (see bench.measure_memory).
+
+The configuration was built in another process and saved with torch.save
+(whole model, e.g. already quantized). Here we only load it, so no FP32 copy
+of a quantized model is ever created in this process.
 
 On Windows, psutil's peak_wset is the peak working set over the whole process
 lifetime. It cannot be reset, so we read it at three points:
   1. after imports            (Python + torch + timm runtime)
-  2. after the model is built (adds weight loading)
+  2. after loading the model  (adds the saved model file and its tensors)
   3. after inference          (adds activations)
 All values include the Python/torch runtime; increments are also reported.
 """
@@ -12,8 +16,6 @@ import json
 
 import psutil
 import torch
-
-from common import setup
 
 MB = 1024**2
 
@@ -24,18 +26,21 @@ def peak_mb() -> float:
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--model", required=True)
-    p.add_argument("--method", required=True)
+    p.add_argument("--model-file", required=True)
+    p.add_argument("--input-file", required=True)
     p.add_argument("--runs", type=int, default=20)
+    p.add_argument("--threads", type=int, required=True)
     args = p.parse_args()
 
-    setup()
+    torch.manual_seed(0)
+    torch.set_num_threads(args.threads)
+    import timm  # noqa: F401  (classes needed to unpickle the model)
     import models
-    from data import timing_input
+    models.register_tome_class()  # needed to unpickle ToMe models, see models.py
 
     after_import = peak_mb()
-    model, data_config = models.build(args.model, args.method)
-    x = timing_input(data_config)
+    model = torch.load(args.model_file, weights_only=False).eval()
+    x = torch.load(args.input_file)
     after_load = peak_mb()
     with torch.inference_mode():
         for _ in range(args.runs):

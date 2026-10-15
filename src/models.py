@@ -42,6 +42,30 @@ def _import_tome():
     return tome
 
 
+def register_tome_class():
+    """ToMe builds its VisionTransformer subclass inside a function, which pickle
+    cannot save. Create that class once with ToMe's own make_tome_class (code
+    unchanged) and register it here as models.ToMeVisionTransformer, so a patched
+    model can be saved with torch.save and loaded in another process (call this
+    before torch.load there)."""
+    from timm.models.vision_transformer import VisionTransformer
+    _import_tome()
+    from tome.patch.timm import make_tome_class
+    module = sys.modules[__name__]
+    if not hasattr(module, "ToMeVisionTransformer"):
+        cls = make_tome_class(VisionTransformer)
+        cls.__module__, cls.__qualname__ = __name__, "ToMeVisionTransformer"
+        module.ToMeVisionTransformer = cls
+    return module.ToMeVisionTransformer
+
+
+def _use_registered_tome_class(model) -> None:
+    from timm.models.vision_transformer import VisionTransformer
+    # make_tome_class(model.__class__) == make_tome_class(VisionTransformer) here
+    assert type(model).__mro__[1] is VisionTransformer, type(model).__mro__
+    model.__class__ = register_tome_class()
+
+
 def parse_method(method: str) -> dict:
     m = re.fullmatch(r"(?:fp32|int8)|tome_r(\d+)(_int8)?", method)
     if m is None:
@@ -68,6 +92,7 @@ def build(model_name: str, method: str = "fp32") -> tuple[torch.nn.Module, dict]
     if spec["tome_r"] is not None:
         tome = _import_tome()
         tome.patch.timm(model)  # prop_attn=True (default) for off-the-shelf models
+        _use_registered_tome_class(model)
         model.r = spec["tome_r"]
     if spec["int8"]:
         model = quantize_int8(model)

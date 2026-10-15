@@ -172,16 +172,39 @@ def size_on_disk_mb(model) -> float:
         return path.stat().st_size / 1024**2
 
 
-def measure_memory(model_name: str, method: str, timeout_s: int = 600) -> dict:
-    """Peak memory of one configuration, measured in a fresh Python process."""
+MEMORY_CACHE = Path(__file__).resolve().parent.parent / "data" / "cache" / "memory"
+
+
+@torch.inference_mode()
+def measure_memory(model, x, tag: str, num_threads: int, timeout_s: int = 600) -> dict:
+    """Peak memory of an already-built configuration, measured in a fresh process.
+
+    The model (whole module, e.g. already quantized) and the input are saved to
+    disk; first we check here that the saved model reloads to identical outputs,
+    then memory_worker.py loads and runs it in a new Python process."""
+    MEMORY_CACHE.mkdir(parents=True, exist_ok=True)
+    model_file, input_file = MEMORY_CACHE / f"{tag}.pt", MEMORY_CACHE / f"{tag}_input.pt"
+    torch.save(model, model_file)
+    torch.save(x, input_file)
+    reloaded = torch.load(model_file, weights_only=False).eval()
+    identical = bool(torch.equal(model(x), reloaded(x)))
+    del reloaded
+    if not identical:
+        raise RuntimeError(f"saved model {tag} does not reproduce the outputs")
+
     worker = Path(__file__).with_name("memory_worker.py")
     out = subprocess.run(
-        [sys.executable, "-u", str(worker), "--model", model_name, "--method", method],
+        [sys.executable, "-u", str(worker), "--model-file", str(model_file),
+         "--input-file", str(input_file), "--threads", str(num_threads)],
         capture_output=True, text=True, timeout=timeout_s,
-        env={**os.environ, "PYTHONWARNINGS": "ignore"},
+        cwd=Path(__file__).parent, env={**os.environ, "PYTHONWARNINGS": "ignore"},
     )
     if out.returncode != 0:
         raise RuntimeError(f"memory worker failed:\n{out.stderr[-2000:]}")
     # The worker prints exactly one JSON line prefixed with RESULT.
     line = next(l for l in out.stdout.splitlines() if l.startswith("RESULT "))
-    return json.loads(line[len("RESULT "):])
+    return {
+        **json.loads(line[len("RESULT "):]),
+        "saved_model_file_mb": model_file.stat().st_size / 1024**2,
+        "saved_model_reproduces_outputs": identical,
+    }

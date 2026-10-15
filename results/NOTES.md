@@ -60,12 +60,33 @@ All numbers here are copied from files in `results/`; the file is named for each
   cost of quantizing activations in every linear call, which matters more as ToMe
   shrinks the matrices. Do not state it as a finding unless it is measured.
 
-## Memory of INT8 configurations is not a deployment number
-- `peak_total_mb` for int8 (366.56) and tome_r*_int8 (380.85-384.42) is higher than
-  FP32 (358.92) because the memory worker loads the FP32 model and then quantizes it
-  in the same process, so the peak includes the FP32 copy. It does not show the
-  memory needed to run an already-quantized model. The ~15 MB extra of
-  ToMe + INT8 over INT8 is not explained.
+## Memory measurement: old method superseded (2026-10-15)
+- Old method (Phase 1-3 runs, `latency_raw/*_summary.csv`): the fresh process built
+  the configuration itself from the pretrained FP32 checkpoint. For INT8 the peak
+  therefore included the FP32 copy made before quantization: int8 366.56 MB and
+  tome_r*_int8 380.85-384.42 MB, higher than FP32 358.92 MB. Those numbers do not
+  show the memory needed to run an INT8 model and are no longer used. Their columns
+  were removed from `latency.csv`; they remain in `latency_raw/` for reference.
+- New method (`src/memory.py`, results in `memory.csv`): each configuration is built,
+  saved with torch.save (whole module), checked to reload to identical outputs, and
+  a fresh process (`memory_worker.py`) only loads and runs it. All 15 saved models
+  reproduced their outputs exactly.
+- To make ToMe models savable, models.py registers ToMe's class (created by ToMe's
+  own make_tome_class, code unchanged) under a fixed module name. Checked: identical
+  logits to the original ToMe patch on 25 images for tome_r8 and tome_r16_int8, and
+  `tome_compat_check.py` still passes.
+- Results, run `memory_raw/2026-10-15T15-20-30.csv`, 224 px, batch 1:
+  FP32 339.64 MB, INT8 336.69 MB; ToMe 341.69-347.25 MB; ToMe + INT8 354.81-359.02 MB.
+  About 305-307 MB of every value is the Python/torch/timm runtime after imports.
+- With the new method inference does add memory at 224 px: FP32 +8.38 MB, ToMe
+  +10.27 to +15.80 MB, INT8 +10.56 MB, ToMe + INT8 +29.39 to +32.70 MB. So at this
+  input size ToMe and especially ToMe + INT8 need MORE peak memory than FP32, not
+  less (measured; the cause is not measured).
+- INT8 load increment is 19.74 MB vs FP32 25.13 MB (-5.4 MB), although the saved
+  file is 6.19 vs 21.92 MB (-15.7 MB). Not explained.
+- One measurement per configuration; run-to-run variability of memory was not
+  measured. Only data point: FP32 338.89 MB in an aborted earlier attempt of the
+  same method (15:17, ToMe failed to load, nothing written) vs 339.64 MB here.
 
 ## Stability test (`stability/`, `src/stability.py`)
 - 3 sessions x 10 FP32 blocks, 10 min apart, Edge closed, VS Code open.
@@ -115,10 +136,18 @@ All numbers here are copied from files in `results/`; the file is named for each
   evaluating B on 200 images at ~1.9 s each. The script was changed to time single
   passes first and skip a candidate that is > 10x slower than FP32.
 
-## Memory
-- At 224 px, batch 1, peak memory is reached while loading weights; inference adds
-  0 MB on top (`inference_increment_mb`). So peak memory does not distinguish the
-  methods at this input size.
+## Memory (old method, superseded; see "Memory measurement" above)
+- With the old method, peak memory was reached while loading the pretrained weights
+  and inference added 0 MB on top. That conclusion does not hold for the new method.
+
+## DeiT-Small: skipped (decided by the user, 2026-10-15)
+- Reason: time limits on this hardware. One full Imagenette accuracy pass of
+  DeiT-Tiny takes 224 s (FP32, `accuracy.csv` eval_seconds). DeiT-Small has twice the
+  embedding width (384 vs 192) and 22,050,664 vs 5,717,416 parameters (both
+  checked in timm 1.0.30) and is expected to take several times longer (not
+  measured), so its 15 configurations would far exceed the 30-minute limit, and the
+  time is better spent on the KITTI resolution scaling.
+  No DeiT-Small number was measured, so none is reported.
 
 ## Data
 - Imagenette-160 val, 3925 images, full set (no subset). Images upscaled to 224 by
