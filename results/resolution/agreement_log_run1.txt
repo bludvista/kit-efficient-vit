@@ -39,4 +39,4 @@ int8          1024x3392  skipped: time limit (estimated 760 s > 600 s)
 tome_r0       1024x3392  not run (skipped: a smaller size was already skipped (skipped: estimated memory too high (peak 2029 MB > 70% of available RAM 1384 MB)))
 tome_p8       1024x3392  not run (skipped: a smaller size was already skipped (skipped: estimated memory too high (peak 2029 MB > 70% of available RAM 1384 MB)))
 tome_p8_int8  1024x3392  not run (skipped: a smaller size was already skipped (skipped: estimated memory too high (peak 2029 MB > 70% of available RAM 1384 MB)))
-Wrote E:\kit-efficient-vit\results\resolution\agreement.csv
+Wrote results\resolution\agreement.csv

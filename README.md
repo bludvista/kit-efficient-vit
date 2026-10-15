@@ -9,20 +9,24 @@ All tables: [`results/summary_tables.md`](results/summary_tables.md) (generated 
 
 ## Main findings
 
-1. **On this CPU, the attention kernel decides how far the token count can grow, more
-   than token merging does.** On KITTI frames, FP32 and INT8 (timm's fused
-   `scaled_dot_product_attention`) ran up to 13569 tokens (1024x3392 input), where one
-   pass takes 27516.55 ms (FP32, one run) and 28136.63 ms (INT8), right at the 30 s time
-   limit. All ToMe variants use the official ToMe code, which computes attention
-   explicitly (N x N matrix). They were stopped at 6993 tokens because their estimated
-   memory exceeded the free RAM, while FP32 at 6993 tokens peaked at 427.21 MB.
-2. **ToMe did not make high-resolution inference cheaper than FP32 here.** At 368x1216
-   (1749 tokens, the size closest to the original KITTI frame), ToMe with r scaled to
-   the input (`tome_p8`, 1749 -> 897 tokens) took 1000.71 ms vs 958.83 ms for FP32, and
-   peaked at 462.10 MB vs 364.98 MB. The same ToMe code without merging (`tome_r0`)
-   took 1362.85 ms and 436.62 MB: merging recovers most of the cost of the explicit
-   attention, but not more. Peak memory does not fall with merging because block 0
-   always attends over all tokens before the first merge.
+1. **The official ToMe implementation computes attention explicitly, and on this CPU
+   that limited how far the token count could grow.** On KITTI frames, FP32 and INT8
+   use timm's fused `scaled_dot_product_attention` (SDPA) and ran up to 13569 tokens
+   (1024x3392 input), where one pass takes 27516.55 ms (FP32, one run) and 28136.63 ms
+   (INT8), right at the 30 s time limit. The official ToMe code builds the full N x N
+   attention matrix; all ToMe variants were stopped at 6993 tokens because their
+   estimated memory exceeded the free RAM, while FP32 at 6993 tokens peaked at
+   427.21 MB. ToMe combined with SDPA was **not tested here**; it is the next step
+   (see [Next step](#next-step)).
+2. **ToMe did not lower peak memory.** At 368x1216 (1749 tokens, the size closest to
+   the original KITTI frame), ToMe with r scaled to the input (`tome_p8`, 1749 -> 897
+   tokens after the last block) peaked at 462.10 MB, vs 364.98 MB for FP32 and
+   436.62 MB for the same ToMe code without merging (`tome_r0`). At 3393 tokens:
+   662.41 MB vs 386.49 MB (FP32) and 632.40 MB (`tome_r0`). ToMe merges tokens only
+   after the attention of each block, so block 0 always attends over all tokens; its
+   N x N attention is present in every ToMe configuration and merging cannot reduce it.
+   Latency of `tome_p8` vs FP32 at 1749 tokens (1000.71 vs 958.83 ms) is within the
+   run-to-run noise of these runs, so it is **not resolved**.
 3. **At 224 px (Imagenette), ToMe gives a clear speed-up only from r = 12 on.** FP32:
    79.79 ms, 98.19% top-1 (10 Imagenette classes), 70.47% (1000 classes). ToMe r = 12:
    69.34 ms, 98.17% / 68.38%. r = 16: 60.17 ms, 97.61% / 65.27%. r = 24: 48.68 ms but
@@ -185,6 +189,16 @@ Each is documented in `results/NOTES.md` with the data that led to it.
 Decided **before** its run: the attention timing run would be reported even if it failed
 rule B. It did fail (reference spread 20.2%), and it is reported with that noise.
 
+## Next step
+
+**ToMe with SDPA.** Replace ToMe's explicit attention with
+`F.scaled_dot_product_attention` and repeat the KITTI resolution scaling. This would
+separate the effect of merging from the effect of the attention kernel (findings 1 and
+2), and show whether ToMe can then run beyond 6993 tokens on this machine. To check
+first: ToMe's proportional attention adds log(token size) to the attention scores,
+which in SDPA needs an additive `attn_mask`; whether PyTorch still uses a
+memory-efficient CPU kernel with such a mask must be tested, not assumed.
+
 ## Limitations
 
 - **One laptop, noisy timing.** Reference noise was 7.3% in the Imagenette latency run
@@ -220,5 +234,17 @@ python attention.py check && python attention.py timing && python attention.py m
 python plots.py && python tables.py
 ```
 
-Data (Imagenette, KITTI) is not included; see `data/` paths in `src/common.py` and
-`src/resolution.py`.
+## Data and references
+
+The data is **not included** in this repository (`data/` is excluded from git). KITTI
+must be downloaded from the official KITTI website after registration; the expected
+folder layout is in `src/resolution.py`, the Imagenette layout in `src/data.py`.
+
+- KITTI: A. Geiger, P. Lenz, C. Stiller, R. Urtasun. *Vision meets Robotics: The KITTI
+  Dataset.* International Journal of Robotics Research (IJRR), 2013.
+- ToMe: D. Bolya, C.-Y. Fu, X. Dai, P. Zhang, C. Feichtenhofer, J. Hoffman. *Token
+  Merging: Your ViT But Faster.* ICLR 2023.
+- DeiT: H. Touvron, M. Cord, M. Douze, F. Massa, A. Sablayrolles, H. Jégou. *Training
+  data-efficient image transformers & distillation through attention.* ICML 2021.
+- Imagenette: J. Howard, fast.ai, https://github.com/fastai/imagenette
+- timm: R. Wightman, PyTorch Image Models, https://github.com/huggingface/pytorch-image-models

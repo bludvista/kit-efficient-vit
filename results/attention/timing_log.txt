@@ -35,4 +35,4 @@ block  26 sdpa  N= 32768 median  12086.211 ms (2 warm-up, 5 runs)
 block  27 reference sdpa N=1024 median   14.854 ms
 
 reference rolling-median spread 20.2% (threshold 10%); raw 38.0%; drift detected: True
-Wrote E:\kit-efficient-vit\results\attention\timing.csv
+Wrote results\attention\timing.csv
