@@ -259,7 +259,8 @@ All numbers here are copied from files in `results/`; the file is named for each
 - Memory (fresh process per point, one call): naive N = 4096 was skipped in the memory
   step (estimate 646 MB > 70% of 874 MB available) although its timing ran earlier,
   when more RAM was free; so naive memory only up to N = 2048.
-- The memory estimate assumed a 250 MB runtime; the measured peak before the call is
-  about 335-340 MB (the worker imports the project modules incl. pandas/timm). So the
+- The memory estimate assumed a 250 MB runtime; the measured peak before the call (inputs
+  included) is 334.98 MB at N = 256, i.e. the runtime is
+  about 85 MB larger than assumed (the worker imports the project modules incl. pandas/timm). So the
   estimates were too low by about that difference; the skip decisions were made with
   the too-low estimate.
