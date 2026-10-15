@@ -176,12 +176,9 @@ MEMORY_CACHE = Path(__file__).resolve().parent.parent / "data" / "cache" / "memo
 
 
 @torch.inference_mode()
-def measure_memory(model, x, tag: str, num_threads: int, timeout_s: int = 600) -> dict:
-    """Peak memory of an already-built configuration, measured in a fresh process.
-
-    The model (whole module, e.g. already quantized) and the input are saved to
-    disk; first we check here that the saved model reloads to identical outputs,
-    then memory_worker.py loads and runs it in a new Python process."""
+def save_and_verify(model, x, tag: str) -> tuple[Path, Path]:
+    """Save the model (whole module, e.g. already quantized) and the input, and
+    check that the saved model reloads to identical outputs."""
     MEMORY_CACHE.mkdir(parents=True, exist_ok=True)
     model_file, input_file = MEMORY_CACHE / f"{tag}.pt", MEMORY_CACHE / f"{tag}_input.pt"
     torch.save(model, model_file)
@@ -191,11 +188,24 @@ def measure_memory(model, x, tag: str, num_threads: int, timeout_s: int = 600) -
     del reloaded
     if not identical:
         raise RuntimeError(f"saved model {tag} does not reproduce the outputs")
+    return model_file, input_file
 
+
+def measure_memory(model, x, tag: str, num_threads: int, timeout_s: int = 600,
+                   runs: int = 20) -> dict:
+    """Peak memory of an already-built configuration, measured in a fresh process:
+    save_and_verify here, then memory_worker.py loads and runs it in a new process."""
+    model_file, input_file = save_and_verify(model, x, tag)
+    return run_memory_worker(model_file, input_file, num_threads, timeout_s, runs)
+
+
+def run_memory_worker(model_file: Path, input_file: Path, num_threads: int,
+                      timeout_s: int = 600, runs: int = 20) -> dict:
+    """Run memory_worker.py on a model saved (and verified) by save_and_verify."""
     worker = Path(__file__).with_name("memory_worker.py")
     out = subprocess.run(
         [sys.executable, "-u", str(worker), "--model-file", str(model_file),
-         "--input-file", str(input_file), "--threads", str(num_threads)],
+         "--input-file", str(input_file), "--threads", str(num_threads), "--runs", str(runs)],
         capture_output=True, text=True, timeout=timeout_s,
         cwd=Path(__file__).parent, env={**os.environ, "PYTHONWARNINGS": "ignore"},
     )
@@ -206,5 +216,5 @@ def measure_memory(model, x, tag: str, num_threads: int, timeout_s: int = 600) -
     return {
         **json.loads(line[len("RESULT "):]),
         "saved_model_file_mb": model_file.stat().st_size / 1024**2,
-        "saved_model_reproduces_outputs": identical,
+        "saved_model_reproduces_outputs": True,  # save_and_verify raises otherwise
     }

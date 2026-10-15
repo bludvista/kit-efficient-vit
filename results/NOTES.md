@@ -154,3 +154,89 @@ All numbers here are copied from files in `results/`; the file is named for each
   timm's eval transform. A uint8 cache of the resized/cropped images is used for
   accuracy runs; verified bit-identical to the original transform (max diff 0.0
   over 100 images) and FP32 predictions identical for all 3925 images.
+
+## Phase 4: resolution scaling on KITTI (`src/resolution.py`, `results/resolution/`)
+- Data: KITTI raw drive `2011_09_26_drive_0001_sync`, left colour camera `image_02`,
+  108 frames of 1242x375 px (put in `data/kitti/` by the user). Consecutive frames
+  at 10 Hz, so highly correlated. Latency and memory use frame 0000000000.
+- Sizes keep KITTI's aspect ratio: H in {64, 128, 192, 256, 368, 512, 736, 1024},
+  W = H * 1242/375 rounded to a multiple of 16. 368x1216 is closest to the original
+  (slight downscale); 512 and up are UPSCALED and only show how cost grows with tokens.
+- Whole frame resized (bicubic, antialias), no crop, model mean/std. timm
+  `dynamic_img_size=True`; the 14x14 position embedding is interpolated (bicubic) on
+  every forward pass. Checked: outputs at 224x224 identical to the normal model; the
+  normal model rejects 128x416; tokens entering block 0 equal patches + 1 at every
+  size that ran (`tokens_verified` in latency.csv).
+- Constant r = 8 does not transfer across sizes (in a pilot it merged 53 tokens down
+  to 2, and 1749 only to 1653). So `tome_p8` uses r = round(8 * patches / 196), the
+  same fraction per block as r = 8 at 224 (no top-1 loss on Imagenette). `tome_r0`
+  (ToMe code, no merging, explicit attention) is the kernel control at every size.
+- Timing protocol: 10 warm-up + 50 timed runs, reduced only when a pass is too slow
+  (warm-up budget 20 s, min 2; timed budget 60 s, min 5); numbers used are in
+  latency.csv per run. One block per configuration per run (not 3 as in Phase 3).
+  Drift check: FP32 reference blocks at 128x416 before every configuration.
+- Limits (decided before the runs): memory = largest tensor > 1.5 GB or estimated
+  peak > 70% of available RAM (estimate: 350 MB runtime + 3 x heads*N^2*4 B for
+  explicit attention, 4 x N*768*4 B for SDPA); time = one pass > 30 s.
+- Breaking points (both runs agree except FP32 at 13569 tokens):
+  * ToMe variants (explicit attention): skipped at 736x2432 (6993 tokens), estimated
+    peak 2029 MB > 70% of available RAM (1384 MB in run 1, 1517 MB in run 2);
+    largest tensor estimate 559.64 MB, so the RAM rule, not the 1.5 GB rule, stopped them.
+  * FP32 at 1024x3392 (13569 tokens): ran in run 1 (27.52 s median), skipped in run 2
+    (first pass 30.2 s > 30 s). It sits exactly at the time limit.
+  * INT8 at 1024x3392 ran in both runs (27.02 s and 29.25 s).
+  * The 1.5 GB single-tensor rule would stop explicit attention at 13569 tokens
+    (2107 MB estimate); SDPA was not stopped by memory at any size tried.
+  * Free RAM at the start of the runs was only 877-880 MB (of 5.9 GB total).
+
+### Post-hoc decision A (2026-10-15, user): two latency runs accepted together
+- Both latency runs FAILED rule B, so neither alone was written to latency.csv:
+  * run `2026-10-15T17-23-30`: 36 reference blocks, 54.67-68.56 ms, rolling-median
+    spread 16.1%, raw spread 25.4%, 2 ignored spikes. Browsers closed, VS Code open.
+  * run `2026-10-15T21-17-16`: 35 reference blocks, 53.03-69.40 ms, rolling-median
+    spread 17.8%, raw spread 30.9%, 1 ignored spike. Browsers and VS Code closed.
+  * The reference wandered up and down with no steady trend; over ~32-min runs this
+    laptop's noise is larger than the 10% rule B threshold. Cause not measured.
+- Decision taken AFTER seeing both runs (so it is post-hoc), by the user: accept both
+  runs together instead of a third identical run or a new protocol. Rule B is not
+  changed for any other experiment.
+- `latency.csv` (made by `resolution.py merge`): latency_median_ms = median of the run
+  medians (= their mean for 2 runs), both runs' values in run1_*/run2_*, p95 over the
+  pooled timed runs, `run_to_run_diff` = (max - min) / min of the run medians.
+- Run-to-run difference over the 33 configurations that ran in both runs: median
+  7.6%, max 21.6% (int8 at 192x640). FP32 at 1024x3392 has one run only (n_runs_ok = 1).
+- Consequence for interpretation: differences between methods at the same resolution
+  that are smaller than about the reference noise (16-18%) or the run-to-run
+  difference of those configurations are NOT resolved by these measurements. This
+  includes most INT8 vs FP32 and tome_p8 vs FP32 comparisons. The growth of latency
+  with tokens (FP32 22.44 ms at 53 tokens; INT8 28.14 s at 13569 tokens) is far larger than the noise.
+
+### Phase 4 peak memory (`results/resolution/memory.csv`)
+- Method as in Phase 3 (fresh process loads the saved model), plus: building/saving/
+  verifying also runs in its own process (`memory-prepare`), so no two copies of a
+  large configuration are alive at once. 3 inference passes in the worker. One
+  measurement per configuration; run-to-run variability not measured.
+- Inference increment, FP32 (SDPA): 6.95 MB at 53 tokens -> 140.37 MB at 13569 tokens.
+  tome_r0 (explicit attention, no merging): 292.05 MB at 3393 tokens vs FP32 45.52 MB.
+- tome_p8 and tome_p8_int8 peak HIGHER than tome_r0 at every size (e.g. 368x1216:
+  462.10 and 466.50 vs 436.62 MB). Merging does not lower peak memory here; block 0
+  attends over all tokens before any merge, so the N x N peak of block 0 remains
+  (this mechanism is the reason by construction of ToMe; the extra MB above tome_r0
+  are measured, not explained).
+- The skip estimate is not an upper bound: it was below the measurement for some
+  ToMe configurations (tome_p8_int8: 387.20 vs 375 MB at 256x848, 466.50 vs 455 MB
+  at 368x1216) and above it at 512x1696 (745 vs 632.40-685.85 MB). The skipped
+  6993-token ToMe configurations were estimated at 2029 MB; they were not run, so
+  their real peak is unknown.
+
+### Phase 4 top-1 agreement (`results/resolution/agreement.csv`, `predictions/`)
+- STABILITY PROXY ONLY, not accuracy: KITTI frames have no ImageNet labels. Top-1 over
+  all 1000 ImageNet classes, compared with FP32 at the same resolution, on 27 frames
+  (every 4th frame, 0-104) of one 11-s drive; the frames are highly correlated.
+- tome_r0 agrees 27/27 at every size it ran (explicit attention = SDPA in top-1).
+- Skips: the ToMe variants at 6993+ tokens (memory, as in latency); FP32 and INT8 at
+  13569 tokens (estimated 743 / 760 s > 600 s budget); tome_p8 and tome_p8_int8 at
+  512x1696: skipped by the RAM rule (available RAM 883 MB in the first agreement run,
+  825 MB in a fresh-process retry of just these configurations, `agreement_log_run2.txt`).
+  The retry recomputed FP32 at 512x1696 (27/27, same predictions file overwritten).
+  The latency and memory runs did run these two configurations, when more RAM was free.

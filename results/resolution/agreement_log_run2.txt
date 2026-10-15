@@ -1,0 +1,4 @@
+fp32          512x1696  agreement 27/27  (94 s)
+tome_p8       512x1696  skipped: estimated memory too high (peak 745 MB > 70% of available RAM 825 MB)
+tome_p8_int8  512x1696  skipped: estimated memory too high (peak 745 MB > 70% of available RAM 825 MB)
+Wrote E:\kit-efficient-vit\results\resolution\agreement.csv

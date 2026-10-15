@@ -1,0 +1,4 @@
+model,method,height,width,input_size,n_patches,tome_r_per_block,run_id,time,status,n_frames,frames,n_agree_with_fp32,agreement_with_fp32,n_distinct_top1,eval_seconds
+deit_tiny_patch16_224,fp32,512,1696,512x1696,3392,,2026-10-15T22-42-21,2026-10-15T22:42:21,ok,27,"every 4th frame, 0-104",27.0,1.0,4.0,94.074068200076
+deit_tiny_patch16_224,tome_p8,512,1696,512x1696,3392,138.0,2026-10-15T22-42-21,2026-10-15T22:43:55,skipped: estimated memory too high (peak 745 MB > 70% of available RAM 825 MB),27,"every 4th frame, 0-104",,,,
+deit_tiny_patch16_224,tome_p8_int8,512,1696,512x1696,3392,138.0,2026-10-15T22-42-21,2026-10-15T22:43:55,skipped: estimated memory too high (peak 745 MB > 70% of available RAM 825 MB),27,"every 4th frame, 0-104",,,,

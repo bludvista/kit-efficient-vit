@@ -9,6 +9,12 @@ Methods:
               torch.ao.quantization.quantize_dynamic (qint8 weights, activations
               quantized at run time; engine onednn). Chosen in int8_api_check.py.
   tome_r<R>_int8  ToMe patch first, then the same INT8 quantization.
+  tome_p<R>[_int8]  ToMe with r scaled to the input size (resolution scaling):
+              r = round(R * n_patches / 196), where 196 = patches at 224x224. This
+              merges the same fraction of tokens per block as tome_r<R> at 224.
+              Needs n_patches (see build).
+dynamic_img_size=True uses timm's position-embedding interpolation (bicubic,
+resampled on every forward pass) so the model accepts other input sizes.
 Compatibility with the installed timm is tested in tome_compat_check.py.
 """
 import re
@@ -67,11 +73,17 @@ def _use_registered_tome_class(model) -> None:
 
 
 def parse_method(method: str) -> dict:
-    m = re.fullmatch(r"(?:fp32|int8)|tome_r(\d+)(_int8)?", method)
+    m = re.fullmatch(r"(?:fp32|int8)|tome_([rp])(\d+)(_int8)?", method)
     if m is None:
         raise ValueError(f"Unknown method {method!r}")
-    return {"tome_r": None if m.group(1) is None else int(m.group(1)),
-            "int8": method == "int8" or m.group(2) is not None}
+    return {"tome_r": None if m.group(2) is None else int(m.group(2)),
+            "tome_scaled": m.group(1) == "p",
+            "int8": method == "int8" or m.group(3) is not None}
+
+
+def scaled_r(r_at_224: int, n_patches: int, patches_at_224: int = 196) -> int:
+    """r for tome_p<R>: same fraction of tokens merged per block as r at 224x224."""
+    return round(r_at_224 * n_patches / patches_at_224)
 
 
 def quantize_int8(model: torch.nn.Module) -> torch.nn.Module:
@@ -84,16 +96,25 @@ def quantize_int8(model: torch.nn.Module) -> torch.nn.Module:
             model, {nn.Linear}, dtype=torch.qint8, inplace=True)
 
 
-def build(model_name: str, method: str = "fp32") -> tuple[torch.nn.Module, dict]:
-    """Return (model in eval mode, timm data config)."""
+def build(model_name: str, method: str = "fp32", dynamic_img_size: bool = False,
+          n_patches: int | None = None) -> tuple[torch.nn.Module, dict]:
+    """Return (model in eval mode, timm data config). n_patches (input patches,
+    without the class token) is required for tome_p<R>."""
     spec = parse_method(method)
-    model = timm.create_model(model_name, pretrained=True).eval()
+    model = timm.create_model(model_name, pretrained=True,
+                              dynamic_img_size=dynamic_img_size).eval()
     data_config = resolve_data_config({}, model=model)
     if spec["tome_r"] is not None:
         tome = _import_tome()
         tome.patch.timm(model)  # prop_attn=True (default) for off-the-shelf models
         _use_registered_tome_class(model)
-        model.r = spec["tome_r"]
+        if spec["tome_scaled"]:
+            if n_patches is None:
+                raise ValueError(f"{method} needs n_patches")
+            assert model.patch_embed.num_patches == 196, model.patch_embed.num_patches
+            model.r = scaled_r(spec["tome_r"], n_patches)
+        else:
+            model.r = spec["tome_r"]
     if spec["int8"]:
         model = quantize_int8(model)
     return model, data_config
