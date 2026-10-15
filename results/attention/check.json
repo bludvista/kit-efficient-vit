@@ -1,0 +1,30 @@
+{
+  "time": "2026-10-15T22:44:16",
+  "torch": "2.14.1+cpu",
+  "checks": [
+    {
+      "n": 256,
+      "max_abs_diff": 2.980232238769531e-07,
+      "allclose_atol1e-5": true
+    },
+    {
+      "n": 1024,
+      "max_abs_diff": 1.7881393432617188e-07,
+      "allclose_atol1e-5": true
+    },
+    {
+      "n": 2048,
+      "max_abs_diff": 1.4901161193847656e-07,
+      "allclose_atol1e-5": true
+    }
+  ],
+  "sdpa_cpu_ops": [
+    "aten::_scaled_dot_product_flash_attention_for_cpu",
+    "aten::as_strided",
+    "aten::empty",
+    "aten::empty_like",
+    "aten::empty_strided",
+    "aten::scaled_dot_product_attention",
+    "aten::transpose"
+  ]
+}

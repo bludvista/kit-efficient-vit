@@ -1,0 +1,38 @@
+run 2026-10-15T22-44-39  idle CPU 7.5%  AC power True
+heat-up: 10561 untimed calls in 180 s
+block   0 reference sdpa N=1024 median   18.601 ms
+block   1 reference sdpa N=1024 median   17.986 ms
+block   2 naive N=   256 median      1.272 ms (10 warm-up, 50 runs)
+block   3 reference sdpa N=1024 median   17.274 ms
+block   4 sdpa  N=   256 median      0.853 ms (10 warm-up, 50 runs)
+block   5 reference sdpa N=1024 median   16.265 ms
+block   6 naive N=   512 median      6.457 ms (10 warm-up, 50 runs)
+block   7 reference sdpa N=1024 median   17.863 ms
+block   8 sdpa  N=   512 median      4.301 ms (10 warm-up, 50 runs)
+block   9 reference sdpa N=1024 median   13.479 ms
+block  10 naive N=  1024 median     26.819 ms (10 warm-up, 50 runs)
+block  11 reference sdpa N=1024 median   18.433 ms
+block  12 sdpa  N=  1024 median     15.997 ms (10 warm-up, 50 runs)
+block  13 reference sdpa N=1024 median   17.761 ms
+block  14 naive N=  2048 median    112.470 ms (10 warm-up, 50 runs)
+block  15 reference sdpa N=1024 median   16.430 ms
+block  16 sdpa  N=  2048 median     61.753 ms (10 warm-up, 50 runs)
+block  17 reference sdpa N=1024 median   17.265 ms
+block  18 naive N=  4096 median    425.503 ms (10 warm-up, 50 runs)
+block  19 reference sdpa N=1024 median   14.968 ms
+block  20 sdpa  N=  4096 median    216.903 ms (10 warm-up, 50 runs)
+          naive N=  8192 skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB)
+block  21 reference sdpa N=1024 median   17.804 ms
+block  22 sdpa  N=  8192 median    823.738 ms (10 warm-up, 50 runs)
+          naive N= 16384 skipped: a smaller N was already skipped (skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB))
+block  23 reference sdpa N=1024 median   14.968 ms
+block  24 sdpa  N= 16384 median   3067.741 ms (6 warm-up, 19 runs)
+          naive N= 32768 skipped: a smaller N was already skipped (skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB))
+block  25 reference sdpa N=1024 median   15.885 ms
+block  26 sdpa  N= 32768 median  12086.211 ms (2 warm-up, 5 runs)
+          naive N= 65536 skipped: a smaller N was already skipped (skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB))
+          sdpa  N= 65536 skipped: time limit (first call 48.6 s > 30 s)
+block  27 reference sdpa N=1024 median   14.854 ms
+
+reference rolling-median spread 20.2% (threshold 10%); raw 38.0%; drift detected: True
+Wrote E:\kit-efficient-vit\results\attention\timing.csv

@@ -1,0 +1,19 @@
+method,seq_len,heads,head_dim,run_id,time,status,measurement,est_largest_tensor_mb,est_peak_mb,available_ram_mb_before,skip_reason,peak_after_inputs_mb,peak_total_mb,call_increment_mb
+naive,256,3,64,2026-10-15T22-53-47,2026-10-15T22:53:47,ok,"fresh process, one call",0.75,252.25,840.8515625,,334.984375,338.58203125,3.59765625
+sdpa,256,3,64,2026-10-15T22-53-47,2026-10-15T22:53:58,ok,"fresh process, one call",0.1875,251.5,858.6640625,,334.984375,336.90625,1.921875
+naive,512,3,64,2026-10-15T22-53-47,2026-10-15T22:54:09,ok,"fresh process, one call",3.0,257.5,852.16015625,,335.62109375,344.6953125,9.07421875
+sdpa,512,3,64,2026-10-15T22-53-47,2026-10-15T22:54:20,ok,"fresh process, one call",0.375,253.0,851.98046875,,335.3125,337.98828125,2.67578125
+naive,1024,3,64,2026-10-15T22-53-47,2026-10-15T22:54:31,ok,"fresh process, one call",12.0,277.0,861.86328125,,337.11328125,364.92578125,27.8125
+sdpa,1024,3,64,2026-10-15T22-53-47,2026-10-15T22:54:43,ok,"fresh process, one call",0.75,256.0,849.99609375,,336.58984375,341.828125,5.23828125
+naive,2048,3,64,2026-10-15T22-53-47,2026-10-15T22:54:54,ok,"fresh process, one call",48.0,352.0,830.03515625,,338.6875,440.390625,101.703125
+sdpa,2048,3,64,2026-10-15T22-53-47,2026-10-15T22:55:05,ok,"fresh process, one call",1.5,262.0,870.48828125,,338.69921875,344.70703125,6.0078125
+naive,4096,3,64,2026-10-15T22-53-47,2026-10-15T22:55:16,skipped: estimated memory too high (peak 646 MB > 70% of available RAM 874 MB),"fresh process, one call",192.0,646.0,874.05078125,skipped: estimated memory too high (peak 646 MB > 70% of available RAM 874 MB),,,
+sdpa,4096,3,64,2026-10-15T22-53-47,2026-10-15T22:55:16,ok,"fresh process, one call",3.0,274.0,874.05078125,,343.21484375,350.76171875,7.546875
+naive,8192,3,64,2026-10-15T22-53-47,2026-10-15T22:55:28,not run (skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB)),"fresh process, one call",768.0,1810.0,870.96875,skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 871 MB),,,
+sdpa,8192,3,64,2026-10-15T22-53-47,2026-10-15T22:55:28,ok,"fresh process, one call",6.0,298.0,870.96875,,352.19921875,362.7578125,10.55859375
+naive,16384,3,64,2026-10-15T22-53-47,2026-10-15T22:55:40,not run (skipped: a smaller N was already skipped (skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB))),"fresh process, one call",3072.0,6442.0,867.94921875,skipped: estimated memory too high (largest tensor 3072 MB > 1536 MB),,,
+sdpa,16384,3,64,2026-10-15T22-53-47,2026-10-15T22:55:40,ok,"fresh process, one call",12.0,346.0,867.94921875,,370.359375,387.0234375,16.6640625
+naive,32768,3,64,2026-10-15T22-53-47,2026-10-15T22:55:55,not run (skipped: a smaller N was already skipped (skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB))),"fresh process, one call",12288.0,24922.0,901.609375,skipped: estimated memory too high (largest tensor 12288 MB > 1536 MB),,,
+sdpa,32768,3,64,2026-10-15T22-53-47,2026-10-15T22:55:55,ok,"fresh process, one call",24.0,442.0,901.609375,,406.1171875,435.0625,28.9453125
+naive,65536,3,64,2026-10-15T22-53-47,2026-10-15T22:56:22,not run (skipped: a smaller N was already skipped (skipped: estimated memory too high (peak 1810 MB > 70% of available RAM 859 MB))),"fresh process, one call",49152.0,98746.0,975.44921875,skipped: estimated memory too high (largest tensor 49152 MB > 1536 MB),,,
+sdpa,65536,3,64,2026-10-15T22-53-47,2026-10-15T22:56:22,not run (skipped: time limit (first call 48.6 s > 30 s)),"fresh process, one call",48.0,634.0,975.3671875,,,,

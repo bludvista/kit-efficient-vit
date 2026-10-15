@@ -1,0 +1,107 @@
+{
+  "run_id": "2026-10-15T22-44-39",
+  "system_state_before": {
+    "timestamp": "2026-10-15T22:44:39",
+    "idle_cpu_percent": 7.5,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true,
+    "running_apps": {
+      "chrome": 11,
+      "msedge": 0,
+      "firefox": 0,
+      "brave": 0,
+      "opera": 0,
+      "code": 11,
+      "onedrive": 0
+    }
+  },
+  "system_state_after": {
+    "timestamp": "2026-10-15T22:53:11",
+    "idle_cpu_percent": 5.1,
+    "ActivePowerScheme": "48684d4a-8524-4093-8a63-ea7132b79c1c",
+    "ActiveOverlayAcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "ActiveOverlayDcPowerScheme": "961cc777-2547-4f9d-8174-7d86181b8a7a",
+    "overlay_ac_name": "Best power efficiency (confirmed by user in Windows Settings, 2026-10-14)",
+    "on_ac_power": true,
+    "running_apps": {
+      "chrome": 11,
+      "msedge": 0,
+      "firefox": 0,
+      "brave": 0,
+      "opera": 0,
+      "code": 11,
+      "onedrive": 0
+    }
+  },
+  "heatup": {
+    "start_time": "2026-10-15T22:44:42",
+    "end_time": "2026-10-15T22:47:42",
+    "seconds": 180.0,
+    "forward_passes": 10561
+  },
+  "drift": {
+    "rule": "rolling median of 3 consecutive baseline blocks, spread <= 10%",
+    "baseline_block_medians_ms": [
+      18.600999959744513,
+      17.985600046813488,
+      17.273599980399013,
+      16.26489998307079,
+      17.863349989056587,
+      13.479350018315017,
+      18.432649900205433,
+      17.76129996869713,
+      16.43005001824349,
+      17.26540003437549,
+      14.96774994302541,
+      17.803999944590032,
+      14.968400006182492,
+      15.885300119407475,
+      14.85415012575686
+    ],
+    "rolling_medians_ms": [
+      17.985600046813488,
+      17.273599980399013,
+      17.273599980399013,
+      16.26489998307079,
+      17.863349989056587,
+      17.76129996869713,
+      17.76129996869713,
+      17.26540003437549,
+      16.43005001824349,
+      17.26540003437549,
+      14.968400006182492,
+      15.885300119407475,
+      14.968400006182492
+    ],
+    "relative_spread": 0.20157131285807323,
+    "threshold": 0.1,
+    "drift_detected": true,
+    "ignored_spikes": [
+      {
+        "baseline_index": 5,
+        "median_ms": 13.479350018315017,
+        "local_median_ms": 17.863349989056587,
+        "deviation": 0.24541869097494523
+      },
+      {
+        "baseline_index": 10,
+        "median_ms": 14.96774994302541,
+        "local_median_ms": 17.26540003437549,
+        "deviation": 0.13307830034493537
+      },
+      {
+        "baseline_index": 11,
+        "median_ms": 17.803999944590032,
+        "local_median_ms": 14.968400006182492,
+        "deviation": 0.18943908081266767
+      }
+    ],
+    "n_ignored_spikes": 3,
+    "raw_spread_old_rule": 0.37996267879908696
+  },
+  "reference": "sdpa N=1024",
+  "end_time": "2026-10-15T22:53:14"
+}

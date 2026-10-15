@@ -240,3 +240,26 @@ All numbers here are copied from files in `results/`; the file is named for each
   825 MB in a fresh-process retry of just these configurations, `agreement_log_run2.txt`).
   The retry recomputed FP32 at 512x1696 (27/27, same predictions file overwritten).
   The latency and memory runs did run these two configurations, when more RAM was free.
+
+## Phase 5: attention scaling, synthetic (`src/attention.py`, `results/attention/`)
+- Random float32 Q, K, V, batch 1, 3 heads, head dim 64 (DeiT-Tiny's shape),
+  N = 256 ... 65536 (doubling). naive = softmax(QK^T/sqrt(d))V written out;
+  sdpa = F.scaled_dot_product_attention, no mask. CPU only; memory-efficient attention
+  kernels mainly target GPUs, so published GPU results need not carry over.
+- `check.json`: outputs agree (max abs diff <= 2.98e-7 at N = 256, 1024, 2048). The
+  profiler shows sdpa runs `aten::_scaled_dot_product_flash_attention_for_cpu` here.
+- Timing run `2026-10-15T22-44-39`: FAILED rule B (reference sdpa N=1024 rolling-median
+  spread 20.2%, raw 38.0%; the reference got faster during the run, ~18.6 -> ~14.9 ms).
+  Decided BEFORE the run (written in attention.py): report it with its noise, no rerun.
+  `drift_detected` is in every row of timing.csv. At each N sdpa was timed right after
+  naive; with the machine getting faster over the run, this order favours sdpa slightly.
+- Breaking points: naive skipped from N = 8192 (estimated peak 1810 MB > 70% of
+  available RAM 859 MB; single tensor 768 MB, under 1.5 GB). sdpa ran to N = 32768
+  (12086.211 ms median); N = 65536 hit the time limit (first call 48.6 s > 30 s).
+- Memory (fresh process per point, one call): naive N = 4096 was skipped in the memory
+  step (estimate 646 MB > 70% of 874 MB available) although its timing ran earlier,
+  when more RAM was free; so naive memory only up to N = 2048.
+- The memory estimate assumed a 250 MB runtime; the measured peak before the call is
+  about 335-340 MB (the worker imports the project modules incl. pandas/timm). So the
+  estimates were too low by about that difference; the skip decisions were made with
+  the too-low estimate.
