@@ -8,3 +8,5 @@ __pycache__/
 *.onnx
 *.pt
 *.pth
+# Local project instructions (not published)
+CLAUDE.md
