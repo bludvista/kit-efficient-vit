@@ -22,7 +22,7 @@ Methods per resolution (see models.py):
                 fraction of tokens per block as r = 8 at 224 (no top-1 loss on Imagenette).
   tome_p8_int8  tome_p8, then INT8
 
-Limits (CLAUDE.md; checked before every configuration, skips are recorded, not hidden):
+Limits (project limits; checked before every configuration, skips are recorded, not hidden):
   memory: estimated largest single tensor > 1.5 GB, or estimated peak > 70% of the
           RAM available at that moment -> "skipped: estimated memory too high".
   time:   one forward pass > TIME_LIMIT_S (or extrapolated quadratically from the
